@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arqueo de Caja</title>
+<style>
+body {
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    background: #f5f5f7;
+    padding: 20px;
+}
+h1 {
+    text-align: center;
+}
+.card {
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+}
+label {
+    font-weight: 600;
+}
+input {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0 20px 0;
+    font-size: 18px;
+}
+button {
+    width: 100%;
+    padding: 15px;
+    font-size: 18px;
+    background: #007aff;
+    color: white;
+    border: none;
+    border-radius: 10px;
+}
+.hidden {
+    display: none;
+}
+</style>
+</head>
+
+<body>
+
+<h1>Arqueo de Caja</h1>
+
+<div class="card" id="stepDatos">
+    <label>Nombre del local</label>
+    <input type="text" id="local">
+    <label>Nombre del empleado</label>
+    <input type="text" id="empleado">
+    <button onclick="iniciar()">Iniciar arqueo</button>
+</div>
+
+<div class="card hidden" id="stepArqueo">
+    <label id="pregunta"></label>
+    <input type="number" id="cantidad" min="0" value="0">
+    <button onclick="siguiente()">Siguiente</button>
+</div>
+
+<div class="card hidden" id="stepFinal">
+    <h2>Total: <span id="total"></span> €</h2>
+    <button onclick="enviarEmail()">Enviar por email</button>
+</div>
+
+<script>
+const denominaciones = [
+    0.10,0.20,0.50,1,2,
+    5,10,20,50,100
+];
+
+let index = 0;
+let datos = {};
+let total = 0;
+
+function iniciar() {
+    if (!local.value || !empleado.value) {
+        alert("Completa local y empleado");
+        return;
+    }
+    stepDatos.classList.add("hidden");
+    stepArqueo.classList.remove("hidden");
+    mostrarPregunta();
+}
+
+function mostrarPregunta() {
+    pregunta.innerText = `¿Cuántos ${denominaciones[index]} € hay?`;
+    cantidad.value = 0;
+}
+
+function siguiente() {
+    const cant = Number(cantidad.value);
+    datos[denominaciones[index]] = cant;
+    total += cant * denominaciones[index];
+    index++;
+
+    if (index < denominaciones.length) {
+        mostrarPregunta();
+    } else {
+        stepArqueo.classList.add("hidden");
+        stepFinal.classList.remove("hidden");
+        totalSpan = document.getElementById("total");
+        totalSpan.innerText = total.toFixed(2);
+    }
+}
+
+function enviarEmail() {
+    let texto = `ARQUEO DE CAJA\n\n`;
+    texto += `Local: ${local.value}\n`;
+    texto += `Empleado: ${empleado.value}\n`;
+    texto += `Fecha: ${new Date().toLocaleString()}\n\n`;
+
+    for (let d in datos) {
+        if (datos[d] > 0) {
+            texto += `${d} € x ${datos[d]} = ${(d * datos[d]).toFixed(2)} €\n`;
+        }
+    }
+
+    texto += `\nTOTAL: ${total.toFixed(2)} €`;
+
+    const email = "ivanbrun@grupocapote.com";
+    const subject = encodeURIComponent(`Arqueo de caja - ${local.value}`);
+    const body = encodeURIComponent(texto);
+
+    window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+}
+</script>
+
+</body>
+</html>
